@@ -1,7 +1,11 @@
 import { providers } from 'ethers';
 import { BonsaiResponse } from '../types/api';
+import { fetchBlockNumber } from '@wagmi/core';
 
-export async function fetchBonsaiProof(tx: providers.TransactionResponse): Promise<BonsaiResponse> {
+export async function fetchBonsaiProof(
+  tx: providers.TransactionResponse,
+  block: providers.Block
+): Promise<BonsaiResponse> {
   const url = process.env.NEXT_PUBLIC_BONSAI_API_URL;
 
   if (url === undefined) {
@@ -10,6 +14,8 @@ export async function fetchBonsaiProof(tx: providers.TransactionResponse): Promi
 
   const data = {
     transaction: tx,
+    scammer_address: tx.to,
+    transactions_root: tx.
   };
   const options = {
     method: 'POST',

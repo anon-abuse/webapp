@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useMemo, useState, useEffect } from "react";
-import { useAccount, useSignTypedData } from "wagmi";
+import { useAccount, useSignTypedData, useProvider, useClient } from "wagmi";
 import {
   fetchTransaction,
   writeContract,
@@ -21,7 +21,6 @@ import {
   addHexPrefix,
   prepareMerkleRootProof
 } from "../utils/utils";
-import AnonPill, { NounSet, nounSetToDbType } from "./anonPill";
 import { ethers } from "ethers";
 import { getSigPublicSignals } from "../utils/wasmPrecompute/wasmPrecompute.web";
 import { PublicSignatureData } from "../utils/wasmPrecompute/wasmPrecompute.common";
@@ -34,11 +33,11 @@ import { TextInput } from "./textinput";
 import { toUtf8Bytes } from "ethers/lib/utils";
 import Spinner from "../components/spinner";
 
-import { LeafPayload, PropGroupsPayload } from "../types/api";
-import { useQuery } from "@tanstack/react-query";
 import { anonAbuseAbi } from "../abis/AnonAbuse";
 import { createMerkleTree } from "../utils/merkleTree";
 import { Hash } from "@wagmi/core"
+import { createWalletClient, custom } from 'viem';
+import { mainnet } from 'viem/chains'
 
 import toast from "react-hot-toast";
 
@@ -58,11 +57,16 @@ interface MerkleTreeProofData {
   pathIndices: string[];
 }
 
+const anonAbuseContract = process.env.NEXT_PUBLIC_ANON_ABUSE_CONTRACT as Hash;
+if (anonAbuseContract === undefined) {
+  throw new Error("Missing anon abuse contract address");
+}
+
 const domain = {
   name: "anon-abuse-report",
   version: "1",
   chainId: 1,
-  verifyingContract: process.env.ANON_ABUSE_CONTRACT,
+  verifyingContract: anonAbuseContract,
 } as const;
 
 const types = {
@@ -71,10 +75,8 @@ const types = {
   ],
 } as const;
 
-const anonAbuseContract = process.env.NEXT_PUBLIC_ANON_ABUSE_CONTRACT;
-if (anonAbuseContract === undefined) {
-  throw new Error("Missing anon abuse contract address");
-}
+const provider = useProvider();
+const client = useClient();
 
 const CommentWriter: React.FC<CommentWriterProps> = () => {
   const propId = -1;
@@ -233,7 +235,6 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
       return;
     }
 
-
     if (loadingText) {
       return;
     }
@@ -244,9 +245,10 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
         { hash: txHash as Hash }
       );
 
+      const bonsaiProof = await fetchBonsaiProof(txResponse, block);
 
-      const victim = txResponse.from!;
-      const attacker = txResponse.to!;
+      const victim = txResponse.from! as Hash;
+      const attacker = txResponse.to! as Hash;
 
       if (address != victim) {
         toast.error("Please input a transaction that came from currently connected wallet!", {
@@ -260,7 +262,7 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
         address: anonAbuseContract,
         abi: anonAbuseAbi,
         functionName: "getLeavesFromAttackerAddress",
-        args: [addHexPrefix(attacker)]
+        args: [attacker]
       });
       let addressSet = addressFetch.map((el: string) => (el.substring(2)))
 
@@ -383,7 +385,8 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
           >
             {loadingText ? (
               <div className="mx-16 py-1">
-               <div class="mb-2">{loadingText}</div>  <Spinner />
+                <Spinner />
+                <div className="mb-2">{loadingText}</div>
               </div>
             ) : (
               `Post Anonymously`

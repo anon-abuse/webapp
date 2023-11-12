@@ -20,7 +20,7 @@ import { Toaster } from "react-hot-toast";
 const { chains, provider, webSocketProvider } = configureChains(
   [chain.foundry],
   [
-    infuraProvider({ apiKey: process.env.NEXT_PUBLIC_CLIENT_INFURA_PROJECT_ID }),
+    // infuraProvider({ apiKey: process.env.NEXT_PUBLIC_CLIENT_INFURA_PROJECT_ID }),
     jsonRpcProvider({ rpc: (chain) => ({ http: "http://localhost:8545" })})
   ]);
 
