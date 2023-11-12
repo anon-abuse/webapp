@@ -35,7 +35,7 @@ export interface DisplayProp {
 
 const Home: NextPage = () => {
   const { data: currentBlockNumber } = useBlockNumber();
-  const [tabState, setTabState] = useState(0);
+  const [tabState, setTabState] = useState(1);
 
   const { isLoading: propIdsLoading, data: propIdsPayload } =
     useQuery<PropsPayload>({
@@ -92,7 +92,7 @@ const Home: NextPage = () => {
   return (
     <div>
       <Head>
-        <title>Heyanoun</title>
+        <title>Anon-Abuse</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -110,7 +110,7 @@ const Home: NextPage = () => {
                   transition={{ duration: 0.3 }}
                   className="text-3xl md:text-5xl text-white font-bold leading-[40px] md:leading-14"
                 >
-                  Report malicious on-chain activity anonymously.
+                  Share your experience anonymously
                 </motion.h1>
                 <motion.p
                   initial={{ y: -12, opacity: 0 }}
@@ -118,8 +118,7 @@ const Home: NextPage = () => {
                   transition={{ duration: 0.3, delay: 0.1 }}
                   className="mt-4 text-lg md:text-xl font-normal md:leading-8 text-white"
                 >
-                  Anon-Abuse allows victims to report scams or phishing attacks without
-                  revealing identity using zero-knowledge proofs.{" "}
+                  Anon-Abuse allows victims of scams, hacks, or phishing attacks to provide credible reports about their experiences without doxxing their identities{" "}
                 </motion.p>
               </div>
             </div>
