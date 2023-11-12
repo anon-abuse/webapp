@@ -313,8 +313,8 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
       // triggers callback which will call generateProof when it's done
       signTypedData();
     } catch (ex: unknown) {
-      setLoadingText(undefined);
-      console.error(ex);
+      setLoadingText("TEST");
+      console.error("ERROR", ex);
       toast.error("Unexpected error occurred, please try again", {
         position: "bottom-right",
       });
@@ -383,7 +383,7 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
           >
             {loadingText ? (
               <div className="mx-16 py-1">
-                <Spinner />
+               <div class="mb-2">{loadingText}</div>  <Spinner />
               </div>
             ) : (
               `Post Anonymously`

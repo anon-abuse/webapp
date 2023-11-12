@@ -140,7 +140,7 @@ const Home: NextPage = () => {
                   setTabState(0);
                 }}
               >
-                History
+                Feed
               </button>
               <button
                 type="button"

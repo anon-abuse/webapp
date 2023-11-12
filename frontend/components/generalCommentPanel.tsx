@@ -34,32 +34,8 @@ You will then be able to provably share your experience from this set of affecte
 
         <GeneralCommentWriter propId={1} />
 
-        <div className="bg-gray-50 border-t border-gray-200 py-8 pb-16 space-y-4">
-          {isLoading ? (
             <Spinner />
-          ) : data?.comments.length !== 0 ? (
-            data?.comments
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-              )
-              .map((comment) => (
-                <CommentView
-                  key={comment.id}
-                  createdAt={comment.createdAt}
-                  groupType={Number(comment.groupType)}
-                  message={comment.commentMsg}
-                  proof={comment.ipfsProof}
-                />
-              ))
-          ) : (
-            <div className="py-1 px-2 flex row items-center justify-center">
-              <p className="text-l">No comments yet!</p>
-            </div>
-          )}
-        </div>
-      </div>
+     </div>
     </div>
   );
 };
