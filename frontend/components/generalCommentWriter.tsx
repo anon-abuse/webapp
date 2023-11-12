@@ -62,7 +62,7 @@ const domain = {
   name: "anon-abuse-report",
   version: "1",
   chainId: 1,
-  verifyingContract: "0x0000000000000000000000000000000000000000",
+  verifyingContract: process.env.ANON_ABUSE_CONTRACT,
 } as const;
 
 const types = {
@@ -313,7 +313,7 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
       // triggers callback which will call generateProof when it's done
       signTypedData();
     } catch (ex: unknown) {
-      setLoadingText("TEST");
+      setLoadingText(undefined);
       console.error("ERROR", ex);
       toast.error("Unexpected error occurred, please try again", {
         position: "bottom-right",
