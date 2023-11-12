@@ -88,7 +88,7 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
   }, [isTimedSuccess]);
 
   const merkleTreeProofData = React.useRef<MerkleTreeProofData>();
-  const [txHash, setTxHash] = React.useState<`0x${string}`>("0x");
+  const [txHash, setTxHash] = React.useState<`$0x{string}`>("0x");
   const [commentMsg, setCommentMsg] = React.useState<string>("");
   const [loadingText, setLoadingText] = React.useState<string | undefined>(
     undefined
@@ -353,7 +353,7 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
             <TextInput
               value={txHash}
               placeholder="Transaction Hash"
-              onChangeHandler={(newVal) => setTxHash(addHexPrefix(newVal))}
+              onChangeHandler={(newVal) => setTxHash(newVal)}
             />
           </div>
           <div className="bg-gray-50 border-t border-gray-100 flex justify-end items-center p-3 space-x-2">
