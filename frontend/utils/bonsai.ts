@@ -2,10 +2,10 @@ import { providers } from 'ethers';
 import { BonsaiResponse } from '../types/api';
 
 export async function fetchBonsaiProof(tx: providers.TransactionResponse): Promise<BonsaiResponse> {
-  const url = process.env.BONSAI_API_URL;
+  const url = process.env.NEXT_PUBLIC_BONSAI_API_URL;
 
   if (url === undefined) {
-    throw new Error('BONSAI_API_URL is undefined');
+    throw new Error('NEXT_PUBLIC_BONSAI_API_URL is undefined');
   }
 
   const data = {

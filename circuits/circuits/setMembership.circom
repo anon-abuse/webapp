@@ -38,7 +38,7 @@ template SetMembership(n, k, d) {
       ecdsa.s[i] <== s[i];
   }
 
-  for (var i = 0; i < k; i++) { 
+  for (var i = 0; i < k; i++) {
       ecdsa.U[0][i] <== U[0][i];
       ecdsa.U[1][i] <== U[1][i];
   }

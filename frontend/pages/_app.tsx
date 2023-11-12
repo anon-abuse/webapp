@@ -11,14 +11,18 @@ import {
 } from "wagmi";
 import "dotenv";
 import { infuraProvider } from "wagmi/providers/infura";
+import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 
 import "@rainbow-me/rainbowkit/styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 
-const { chains, provider, webSocketProvider } = configureChains(defaultChains, [
-  infuraProvider({ apiKey: process.env.CLIENT_INFURA_PROJECT_ID }),
-]);
+const { chains, provider, webSocketProvider } = configureChains(
+  [chain.foundry],
+  [
+    infuraProvider({ apiKey: process.env.NEXT_PUBLIC_CLIENT_INFURA_PROJECT_ID }),
+    jsonRpcProvider({ rpc: (chain) => ({ http: "http://localhost:8545" })})
+  ]);
 
 const { connectors } = getDefaultWallets({
   appName: "My RainbowKit App",

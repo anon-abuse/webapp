@@ -11,6 +11,7 @@ import {
 import { PointPreComputes } from "../types/zk";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { motion, AnimatePresence } from "framer-motion";
+import "dotenv";
 
 import {
   leafDataToAddress,
@@ -37,6 +38,7 @@ import { LeafPayload, PropGroupsPayload } from "../types/api";
 import { useQuery } from "@tanstack/react-query";
 import { anonAbuseAbi } from "../abis/AnonAbuse";
 import { createMerkleTree } from "../utils/merkleTree";
+import { Hash } from "@wagmi/core"
 
 import toast from "react-hot-toast";
 
@@ -69,7 +71,10 @@ const types = {
   ],
 } as const;
 
-const anonAbuseContract = process.env.ANON_ABUSE_CONTRACT;
+const anonAbuseContract = process.env.NEXT_PUBLIC_ANON_ABUSE_CONTRACT;
+if (anonAbuseContract === undefined) {
+  throw new Error("Missing anon abuse contract address");
+}
 
 const CommentWriter: React.FC<CommentWriterProps> = () => {
   const propId = -1;
@@ -88,7 +93,7 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
   }, [isTimedSuccess]);
 
   const merkleTreeProofData = React.useRef<MerkleTreeProofData>();
-  const [txHash, setTxHash] = React.useState<`$0x{string}`>("0x");
+  const [txHash, setTxHash] = React.useState<string>("");
   const [commentMsg, setCommentMsg] = React.useState<string>("");
   const [loadingText, setLoadingText] = React.useState<string | undefined>(
     undefined
@@ -235,7 +240,9 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
 
     try {
       setLoadingText("Fetching the transaction metadata...");
-      const txResponse = await fetchTransaction({ hash: txHash });
+      const txResponse = await fetchTransaction(
+        { hash: txHash as Hash }
+      );
 
 
       const victim = txResponse.from!;
@@ -256,8 +263,8 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
         args: [addHexPrefix(attacker)]
       });
       let addressSet = addressFetch.map((el: string) => (el.substring(2)))
-      
-      if (!(addressSet.includes(victim))) { 
+
+      if (!(addressSet.includes(victim))) {
         setLoadingText("Generating bonsai proof for merkle tree extension...");
         const bonsaiProof = await fetchBonsaiProof(txResponse);
         // TODO: check if proof is valid and throw error if not?
@@ -278,7 +285,7 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
         setLoadingText('Waiting for transaction to complete...')
         const receipt = await waitForTransaction({ hash: entryPointTxHash });
         console.log(receipt);
-        
+
         addressFetch = await readContract({
           address: anonAbuseContract,
           abi: anonAbuseAbi,
@@ -288,9 +295,9 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
         let addressSet = addressFetch.map((el: string) => (el.substring(2)))
 
       }
-      
-      // assume address not a victim of this attacker since failed to add             
-      if (!(addressSet.includes(victim))) { 
+
+      // assume address not a victim of this attacker since failed to add
+      if (!(addressSet.includes(victim))) {
         toast.error("Address couldn't be associated with attacker. Please try another tx hash", {
           position: "bottom-right",
         });
@@ -298,10 +305,8 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
         return;
       }
 
-
-
       setLoadingText("Generating inclusion proof...");
-      const { pathElements, pathIndices, pathRoot } = await createMerkleTree(addressSet);
+      const { pathElements, pathIndices, pathRoot } = await createMerkleTree(address, addressSet);
       merkleTreeProofData.current = prepareMerkleRootProof(
         pathElements, pathIndices, pathRoot);
 
