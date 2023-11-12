@@ -219,6 +219,16 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
       return;
     }
 
+    if (!address) {
+      toast.error("Please connect your wallet before trying to post!", {
+        position: "bottom-right",
+      });
+      openConnectModal?.();
+      setLoadingText(undefined);
+      return;
+    }
+
+
     if (loadingText) {
       return;
     }
@@ -227,54 +237,71 @@ const CommentWriter: React.FC<CommentWriterProps> = () => {
       setLoadingText("Fetching the transaction metadata...");
       const txResponse = await fetchTransaction({ hash: txHash });
 
+
       const victim = txResponse.from!;
       const attacker = txResponse.to!;
 
-      const preFetchResult = await readContract({
-        address: anonAbuseContract,
-        abi: anonAbuseAbi,
-        functionName: "getLeavesFromAttackerAddress",
-        args: [addHexPrefix(attacker)]
-      });
- 
-      setLoadingText("Generating bonsai proof for merkle tree extension...");
-      const bonsaiProof = await fetchBonsaiProof(txResponse);
-      console.log(bonsaiProof);
-
-      setLoadingText("Adding to victim list...");
-      // TODO: send bonsai proof.
-      const config = await prepareWriteContract({
-        address: anonAbuseContract,
-        abi: anonAbuseAbi,
-        functionName: "entryPoint",
-        args: ["0x00", addHexPrefix(attacker), addHexPrefix(victim)]
-      });
-
-      const { hash: entryPointTxHash } = await writeContract(config);
-
-      setLoadingText('Waiting for transaction to complete...')
-      const receipt = await waitForTransaction({ hash: entryPointTxHash });
-      console.log(receipt);
-
-      const result = await readContract({
-        address: anonAbuseContract,
-        abi: anonAbuseAbi,
-        functionName: "getLeavesFromAttackerAddress",
-        args: [addHexPrefix(attacker)]
-      });
-      setLoadingText("Generating inclusion proof...");
-
-      if (!address) {
-        toast.error("Please connect your wallet before trying to post!", {
+      if (address != victim) {
+        toast.error("Please input a transaction that came from currently connected wallet!", {
           position: "bottom-right",
         });
-        openConnectModal?.();
         setLoadingText(undefined);
         return;
       }
 
-      const { pathElements, pathIndices, pathRoot } = await createMerkleTree(
-        address, result.map((el: string) => (el.substring(2))));
+      let addressFetch = await readContract({
+        address: anonAbuseContract,
+        abi: anonAbuseAbi,
+        functionName: "getLeavesFromAttackerAddress",
+        args: [addHexPrefix(attacker)]
+      });
+      let addressSet = addressFetch.map((el: string) => (el.substring(2)))
+      
+      if (!(addressSet.includes(victim))) { 
+        setLoadingText("Generating bonsai proof for merkle tree extension...");
+        const bonsaiProof = await fetchBonsaiProof(txResponse);
+        // TODO: check if proof is valid and throw error if not?
+        console.log(bonsaiProof);
+
+        setLoadingText("Adding to victim list...");
+        // TODO: send bonsai proof.
+        const config = await prepareWriteContract({
+          address: anonAbuseContract,
+          abi: anonAbuseAbi,
+          functionName: "entryPoint",
+          // AD: Anyone can call this with any data?? Should include Bonsai proof with this call
+          args: ["0x00", addHexPrefix(attacker), addHexPrefix(victim)]
+        });
+
+        const { hash: entryPointTxHash } = await writeContract(config);
+
+        setLoadingText('Waiting for transaction to complete...')
+        const receipt = await waitForTransaction({ hash: entryPointTxHash });
+        console.log(receipt);
+        
+        addressFetch = await readContract({
+          address: anonAbuseContract,
+          abi: anonAbuseAbi,
+          functionName: "getLeavesFromAttackerAddress",
+          args: [addHexPrefix(attacker)]
+        });
+        let addressSet = addressFetch.map((el: string) => (el.substring(2)))
+
+      }
+      
+      // assume address not a victim of this attacker since failed to add             
+      if (!(addressSet.includes(victim))) { 
+        toast.error("Address couldn't be associated with attacker. Please try another tx hash", {
+          position: "bottom-right",
+        });
+        setLoadingText(undefined);
+        return;
+      }
+
+
+
+      setLoadingText("Generating inclusion proof...");
+      const { pathElements, pathIndices, pathRoot } = await createMerkleTree(addressSet);
       merkleTreeProofData.current = prepareMerkleRootProof(
         pathElements, pathIndices, pathRoot);
 
